@@ -1,0 +1,238 @@
+Assignment 1 - Deploy a simple Nginx web server in a Kubernetes cluster.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+  labels:
+    app: nginx
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+---------------------------------------------------------------------------------------------
+Assignment 2 - Create a Kubernetes Deployment for a multi-replica Nginx
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-container
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+------------------------------------------------------------------------------------------------------
+Assignment 3 -  Expose the Nginx Deployment using a Kubernetes Service.
+
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: NodePort
+--------------------------------------------------------------------------------------------------------
+Assignment 4 -Create a Config-Map for storing configuration data and mount it into a Pod
+
+1st 
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-configmap
+data:
+  nginx.conf: |
+    server {
+        listen 80;
+        server_name example.com;
+
+        location / {
+            root /usr/share/nginx/html;
+            index index.html;
+        }
+    }
+
+2nd
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx-pod
+spec:
+  containers:
+  - name: nginx-container
+    image: nginx:latest
+    volumeMounts:
+    - name: nginx-config-volume
+      mountPath: /etc/nginx/conf.d
+  volumes:
+  - name: nginx-config-volume
+    configMap:
+      name: nginx-configmap
+---------------------------------------------------------------------------------
+
+Assignment 5 - Create a Docker file to run a WordPress application with a linked MySQL container.
+
+Dockerfile
+
+FROM wordpress:latest
+
+ENV WORDPRESS_DB_HOST=db \
+    WORDPRESS_DB_USER=root \
+    WORDPRESS_DB_PASSWORD=root
+
+yaml
+
+version: '3'
+
+services:
+  db:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: wordpress
+      MYSQL_USER: wordpress
+      MYSQL_PASSWORD: wordpress
+
+  wordpress:
+    build: .
+    ports:
+      - "8000:80"
+    depends_on:
+      - db
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: wordpress
+-----------------------------------------------------------------------------
+Assignment 6 -  Dockerize a Node.js application and expose it on port 3000.
+
+app.js-
+const express = require('express');
+const app = express();
+
+app.get('/', (req, res) => {
+  res.send('Hello, This is Rishitha Pudi Nodejs website!');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
+
+
+package.json 
+
+{
+  "name": "docker-node-app",
+  "version": "1.0.0",
+  "description": "A simple Node.js app for Docker",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
+
+Dockerfile
+
+FROM node:14
+WORKDIR /usr/src/app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "app.js"]
+
+---------------------------------------------------------------------------------
+Assignment 7 - Create a Dockerfile for a Python web application using Flask. The application should expose port 5000
+
+app.py
+
+from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def hello_docker():
+    return 'Hello, Docker!'
+
+if __name__ == '__main__':
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
+Dockerfile 
+
+FROM python:3.9-slim
+WORKDIR /app
+COPY app.py /app
+RUN pip install --no-cache-dir Flask
+EXPOSE 5000
+CMD ["python", "app.py"]
+-----------------------------------------------------------------------------------
+Assignment 8- Create a Terraform script to provision an AWS EC2 instance with an associated security group allowing incoming traffic on port 22 for SSH.
+
+provider "aws" {
+  region = "ap-south-1"
+  access_key = ""
+  private_key = "" 
+}
+
+resource "aws_security_group" "security_group" {
+  name        = "ssh-security-group"
+  
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "EC2" {
+  ami           = "ami-e34t0*******"
+  instance_type = "t2.medium"
+  security_groups = [aws_security_group.ssh_security_group.name]
+}
+----------------------------------------------------------------------------------
+
+Assignment 9 - Write a Terraform script to provision an AWS RDS instance (MySQL) with specified configurations.
+
+resource "aws_db_instance" "demo" {
+  allocated_storage    = 10
+  db_name              = "newdb"
+  engine               = "mysql"
+  engine_version       = "5.7"
+  instance_class       = "db.t3.micro"
+  username             = "admin"
+  password             = "Admin123"
+  parameter_group_name = "default.mysql5.7"
+  skip_final_snapshot  = true
+  vpc_security_group_ids = ["sg-702346a1774dffe3e4y"]
+  skip_final_snapshot = true
+  maintenance_window     = "Mon:02:00-Mon:05:00"
+  backup_retention_period = 7
+  backup_window           = "01:00-02:00"
+}
+
+
+tags = {
+
+Name = "RDS"
+
+}
+
+
